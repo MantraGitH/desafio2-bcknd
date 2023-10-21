@@ -28,15 +28,7 @@ class ProductManager {
   async saveProducts(products) {
     return new Promise(async (resolve, reject) => {
       try {
-        // Leer el archivo JSON existente
-        const existingData = await fs.promises.readFile(this.filePath, 'utf8');
-        const existingProducts = JSON.parse(existingData);
-        
-        // Agregar los productos al array existente.
-        existingProducts.push(...products);
-  
-        // Guardar todo el array de productos
-        await fs.promises.writeFile(this.filePath, JSON.stringify(existingProducts, null, 2), 'utf8');
+        await fs.promises.writeFile(this.filePath, JSON.stringify(products, null, 2), 'utf8');
         resolve();
       } catch (error) {
         reject(error);
@@ -46,11 +38,45 @@ class ProductManager {
 
   async addProduct(product) {
     const products = await this.getProducts();
-    const id = '_' + Math.random().toString(36).substr(2, 9);
-    const newProduct = { id, ...product };
-    products.push(newProduct);
-    await this.saveProducts(products);
-    return newProduct;
+
+    // Encuentra el ID máximo actual
+    let maxId = 0;
+    products.forEach((p) => {
+      const idNumber = parseInt(p.id.substr(1), 10);
+      if (!isNaN(idNumber) && idNumber > maxId) {
+        maxId = idNumber;
+      }
+    });
+
+    // Incrementa el ID máximo y crea el nuevo ID
+    const newId = '_' + (maxId + 1);
+
+    // Validación del objeto producto
+    if (this.isValidProduct(product)) {
+      const newProduct = { id: newId, ...product };
+      products.push(newProduct);
+      await this.saveProducts(products);
+      return newProduct;
+    } else {
+      throw new Error('El objeto de producto no es válido');
+    }
+  }
+  
+  // Agrega un método para validar el objeto de producto
+  isValidProduct(product) {
+    if (
+      product &&
+      typeof product === 'object' &&
+      'title' in product &&
+      'description' in product &&
+      'price' in product &&
+      'thumbnail' in product &&
+      'code' in product &&
+      'stock' in product
+    ) {
+      return true;
+    }
+    return false;
   }
 
   async getProductById(id) {
