@@ -117,7 +117,7 @@ class ProductManager {
 // Ruta al archivo 'products.json'
 const filePath = path.join(__dirname, 'products.json');
 
-// Ejemplo
+// ej
 const productManager = new ProductManager(filePath);
 
 async function test() {
